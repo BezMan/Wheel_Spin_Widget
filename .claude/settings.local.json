@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./gradlew :spinwheel-sdk:assembleDebug:*)",
+      "Bash(./gradlew :app:assembleDebug:*)"
+    ]
+  }
+}

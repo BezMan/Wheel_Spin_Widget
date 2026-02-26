@@ -1,4 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
+    <application>
+
+        <!-- Home-screen widget receiver -->
+        <receiver
+            android:name=".presentation.widget.SpinWheelWidgetReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/spin_wheel_widget_info" />
+        </receiver>
+
+        <!-- Transparent spin animation activity, launched from widget PendingIntent -->
+        <activity
+            android:name=".presentation.SpinActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.SpinActivity" />
+
+    </application>
+
 </manifest>
