@@ -5,6 +5,8 @@ import com.bez.spinwheel_sdk.domain.model.WheelConfig
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
+private val lenientJson = Json { ignoreUnknownKeys = true }
+
 internal class ConfigPrefs(context: Context) {
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
@@ -18,7 +20,7 @@ internal class ConfigPrefs(context: Context) {
 
     fun load(): WheelConfig? {
         val json = prefs.getString(KEY_CONFIG, null) ?: return null
-        return runCatching { Json.decodeFromString<WheelConfig>(json) }.getOrNull()
+        return runCatching { lenientJson.decodeFromString<WheelConfig>(json) }.getOrNull()
     }
 
     fun lastFetchMillis(): Long = prefs.getLong(KEY_LAST_FETCH, 0L)

@@ -21,6 +21,7 @@ import androidx.compose.ui.unit.dp
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.bez.spinwheel_sdk.data.work.ConfigSyncWorker
+import com.bez.spinwheel_sdk.presentation.SpinActivity
 import com.example.wheelspinwidget.ui.theme.WheelSpinWidgetTheme
 
 class MainActivity : ComponentActivity() {
@@ -44,6 +45,12 @@ class MainActivity : ComponentActivity() {
                         )
                         Spacer(modifier = Modifier.height(32.dp))
                         Button(onClick = {
+                            startActivity(android.content.Intent(this@MainActivity, SpinActivity::class.java))
+                        }) {
+                            Text("Open Spin Wheel")
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Button(onClick = {
                             WorkManager.getInstance(this@MainActivity)
                                 .enqueue(OneTimeWorkRequestBuilder<ConfigSyncWorker>().build())
                         }) {
@@ -51,7 +58,7 @@ class MainActivity : ComponentActivity() {
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                         Text(
-                            text = "Pin the widget to your home screen,\nthen tap the button to simulate a remote config push.",
+                            text = "\"Simulate Config Push\" picks a new random duration\n(1000 / 2500 / 5000 ms). Reopen the wheel to see it.",
                             style = MaterialTheme.typography.bodySmall,
                             textAlign = TextAlign.Center
                         )

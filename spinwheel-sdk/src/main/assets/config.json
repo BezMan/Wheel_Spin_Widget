@@ -1,0 +1,101 @@
+{
+  "data": [
+    {
+      "id": "wheel_fast",
+      "name": "Fast Wheel Widget Configuration",
+      "type": "Widget",
+      "network": {
+        "attributes": {
+          "refreshInterval": 300,
+          "networkTimeout": 30000,
+          "retryAttempts": 3,
+          "cacheExpiration": 3600,
+          "debugMode": false
+        },
+        "assets": {
+          "host": "https://drive.google.com/your-public-folder-or-direct-links/"
+        }
+      },
+      "wheel": {
+        "rotation": {
+          "duration": 1000,
+          "minimumSpins": 3,
+          "maximumSpins": 5,
+          "spinEasing": "easeInOutCubic"
+        },
+        "assets": {
+          "bg": "bg.png",
+          "wheelFrame": "wheel-frame.png",
+          "wheelSpin": "wheel-spin.png",
+          "wheel": "wheel.png"
+        }
+      }
+    },
+    {
+      "id": "wheel_minimal",
+      "name": "Minimal Wheel Widget Configuration",
+      "type": "Widget",
+      "network": {
+        "attributes": {
+          "refreshInterval": 300,
+          "networkTimeout": 30000,
+          "retryAttempts": 3,
+          "cacheExpiration": 3600,
+          "debugMode": false
+        },
+        "assets": {
+          "host": "https://drive.google.com/your-public-folder-or-direct-links/"
+        }
+      },
+      "wheel": {
+        "rotation": {
+          "duration": 2500,
+          "minimumSpins": 3,
+          "maximumSpins": 5,
+          "spinEasing": "easeInOutCubic"
+        },
+        "assets": {
+          "bg": "bg.png",
+          "wheelFrame": "wheel-frame.png",
+          "wheelSpin": "wheel-spin.png",
+          "wheel": "wheel.png"
+        }
+      }
+    },
+    {
+      "id": "wheel_slow",
+      "name": "Slow Wheel Widget Configuration",
+      "type": "Widget",
+      "network": {
+        "attributes": {
+          "refreshInterval": 300,
+          "networkTimeout": 30000,
+          "retryAttempts": 3,
+          "cacheExpiration": 3600,
+          "debugMode": false
+        },
+        "assets": {
+          "host": "https://drive.google.com/your-public-folder-or-direct-links/"
+        }
+      },
+      "wheel": {
+        "rotation": {
+          "duration": 5000,
+          "minimumSpins": 2,
+          "maximumSpins": 3,
+          "spinEasing": "easeInOutCubic"
+        },
+        "assets": {
+          "bg": "bg.png",
+          "wheelFrame": "wheel-frame.png",
+          "wheelSpin": "wheel-spin.png",
+          "wheel": "wheel.png"
+        }
+      }
+    }
+  ],
+  "meta": {
+    "version": 1,
+    "copyright": "Tapp"
+  }
+}
