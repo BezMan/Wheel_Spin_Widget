@@ -2,20 +2,25 @@ package com.bez.spinwheel_sdk.data.prefs
 
 import android.content.Context
 import com.bez.spinwheel_sdk.domain.model.WheelConfig
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import javax.inject.Inject
+import javax.inject.Singleton
+import androidx.core.content.edit
 
 private val lenientJson = Json { ignoreUnknownKeys = true }
 
-internal class ConfigPrefs(context: Context) {
+@Singleton
+internal class ConfigPrefs @Inject constructor(@ApplicationContext context: Context) {
 
     private val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
     fun save(config: WheelConfig) {
-        prefs.edit()
-            .putString(KEY_CONFIG, Json.encodeToString(config))
-            .putLong(KEY_LAST_FETCH, System.currentTimeMillis())
-            .apply()
+        prefs.edit {
+            putString(KEY_CONFIG, Json.encodeToString(config))
+                .putLong(KEY_LAST_FETCH, System.currentTimeMillis())
+        }
     }
 
     fun load(): WheelConfig? {

@@ -3,6 +3,7 @@ package com.bez.spinwheel_sdk.presentation
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * Transparent full-screen activity that plays the in-app spin animation.
@@ -10,6 +11,7 @@ import androidx.activity.compose.setContent
  * The widget spins in-place via [com.bez.spinwheel_sdk.presentation.widget.SpinAnimationWorker];
  * this activity is a separate demo entry-point for the Compose UI.
  */
+@AndroidEntryPoint
 class SpinActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {

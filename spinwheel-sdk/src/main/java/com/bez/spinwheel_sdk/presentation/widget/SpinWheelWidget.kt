@@ -49,7 +49,7 @@ class SpinWheelWidgetProvider : AppWidgetProvider() {
 
         // Seed config from assets if widget tapped before any FCM push simulation.
         if (ConfigPrefs(context).load() == null) {
-            runBlocking { MockConfigRepository(context).fetchConfig() }
+            runBlocking { MockConfigRepository(context, ConfigPrefs(context)).fetchConfig() }
         }
 
         WorkManager.getInstance(context)

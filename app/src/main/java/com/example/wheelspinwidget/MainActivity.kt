@@ -23,7 +23,9 @@ import androidx.work.WorkManager
 import com.bez.spinwheel_sdk.data.work.ConfigSyncWorker
 import com.bez.spinwheel_sdk.presentation.SpinActivity
 import com.example.wheelspinwidget.ui.theme.WheelSpinWidgetTheme
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

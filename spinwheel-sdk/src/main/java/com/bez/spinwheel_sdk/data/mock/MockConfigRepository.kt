@@ -6,16 +6,20 @@ import com.bez.spinwheel_sdk.domain.model.ConfigResponse
 import com.bez.spinwheel_sdk.domain.model.WheelConfig
 import com.bez.spinwheel_sdk.domain.model.WheelResult
 import com.bez.spinwheel_sdk.domain.repository.ConfigRepository
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.json.Json
+import javax.inject.Inject
+import javax.inject.Singleton
 
 private val json = Json { ignoreUnknownKeys = true }
 
-internal class MockConfigRepository(
-    private val context: Context,
-    private val prefs: ConfigPrefs = ConfigPrefs(context)
+@Singleton
+internal class MockConfigRepository @Inject constructor(
+    @param:ApplicationContext private val context: Context,
+    private val prefs: ConfigPrefs
 ) : ConfigRepository {
 
     /**

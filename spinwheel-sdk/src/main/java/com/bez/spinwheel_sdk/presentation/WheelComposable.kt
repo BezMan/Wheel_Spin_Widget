@@ -28,13 +28,11 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import com.bez.spinwheel_sdk.R
-import com.bez.spinwheel_sdk.data.mock.MockConfigRepository
 import com.bez.spinwheel_sdk.domain.model.WheelConfig
 import com.bez.spinwheel_sdk.domain.model.WheelResult
 import kotlin.random.Random
@@ -42,10 +40,7 @@ import kotlin.random.Random
 /** Entry-point composable used by [SpinActivity]. */
 @Composable
 internal fun SpinScreen(onDismiss: () -> Unit) {
-    val context = LocalContext.current
-    val vm: SpinViewModel = viewModel(
-        factory = SpinViewModel.Factory(MockConfigRepository(context.applicationContext))
-    )
+    val vm: SpinViewModel = hiltViewModel()
     val state by vm.config.collectAsState()
 
     LaunchedEffect(Unit) {
