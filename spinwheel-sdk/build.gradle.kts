@@ -46,9 +46,6 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
 
-    // Glance (home-screen AppWidget)
-    implementation(libs.androidx.glance.appwidget)
-
     // Lifecycle / ViewModel
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)

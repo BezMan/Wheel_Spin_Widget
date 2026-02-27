@@ -3,9 +3,9 @@
 
     <application>
 
-        <!-- Home-screen widget receiver -->
+        <!-- Home-screen widget provider -->
         <receiver
-            android:name=".presentation.widget.SpinWheelWidgetReceiver"
+            android:name=".presentation.widget.SpinWheelWidgetProvider"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -15,7 +15,7 @@
                 android:resource="@xml/spin_wheel_widget_info" />
         </receiver>
 
-        <!-- Transparent spin animation activity, launched from widget PendingIntent -->
+        <!-- Transparent spin animation activity, launched from widget tap -->
         <activity
             android:name=".presentation.SpinActivity"
             android:exported="false"

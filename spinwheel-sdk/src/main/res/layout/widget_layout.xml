@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/widget_root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!-- Layer 1: background -->
+    <ImageView
+        android:id="@+id/widget_bg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="centerCrop"
+        android:src="@drawable/bg"
+        android:contentDescription="@null" />
+
+    <!-- Layers 2-4: stacked wheel content, centred -->
+    <FrameLayout
+        android:id="@+id/widget_wheel_area"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_gravity="center">
+
+        <!-- Layer 2: wheel — bitmap updated each animation frame -->
+        <ImageView
+            android:id="@+id/widget_wheel"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"
+            android:contentDescription="@null" />
+
+        <!-- Layer 3: frame — static overlay -->
+        <ImageView
+            android:id="@+id/widget_wheel_frame"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="fitXY"
+            android:src="@drawable/wheel_frame"
+            android:contentDescription="@null" />
+
+        <!-- Layer 4: spin button — visual state indicator -->
+        <ImageView
+            android:id="@+id/widget_spin_btn"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:layout_gravity="center"
+            android:scaleType="fitXY"
+            android:contentDescription="Tap to spin" />
+
+    </FrameLayout>
+
+</FrameLayout>
