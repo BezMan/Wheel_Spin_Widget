@@ -3,8 +3,10 @@ package com.bez.spinwheel_sdk.presentation.widget
 import android.appwidget.AppWidgetManager
 import android.content.ComponentName
 import android.content.Context
+import android.widget.RemoteViews
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.bez.spinwheel_sdk.R
 import com.bez.spinwheel_sdk.data.prefs.ConfigPrefs
 import kotlinx.coroutines.delay
 import kotlin.math.pow
@@ -45,14 +47,26 @@ class SpinAnimationWorker(
         )
         if (ids.isEmpty()) return Result.success()
 
+        // Decode wheel source once — every frame reuses this bitmap for rotation.
+        val wheelSrc = decodeBitmap(context, R.drawable.wheel)
+
         state.setSpinning(true)
         ids.forEach { updateWidget(context, manager, it) }
 
         try {
             for (frame in 1..frames) {
-                state.setRotation(startAngle + delta * easeInOutCubic(frame.toFloat() / frames))
-                ids.forEach { updateWidget(context, manager, it) }
-                if (frame < frames) delay(frameInterval)
+                val frameStart = System.currentTimeMillis()
+                val angle = startAngle + delta * easeInOutCubic(frame.toFloat() / frames)
+                state.setRotation(angle)
+
+                // Only push the wheel layer — avoids re-decoding the 3 static assets each frame.
+                val views = RemoteViews(context.packageName, R.layout.widget_layout)
+                views.setImageViewBitmap(R.id.widget_wheel, rotatedBitmap(wheelSrc, angle))
+                ids.forEach { manager.partiallyUpdateAppWidget(it, views) }
+
+                // Subtract frame processing time so actual cadence stays close to frameInterval.
+                val remaining = frameInterval - (System.currentTimeMillis() - frameStart)
+                if (frame < frames && remaining > 0) delay(remaining)
             }
             state.setRotation((startAngle + delta) % 360f)
         } finally {

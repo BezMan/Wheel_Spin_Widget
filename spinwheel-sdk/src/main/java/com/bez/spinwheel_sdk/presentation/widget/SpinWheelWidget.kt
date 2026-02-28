@@ -9,7 +9,6 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
-import android.graphics.Matrix
 import android.graphics.Paint
 import android.widget.RemoteViews
 import androidx.annotation.DrawableRes
@@ -97,16 +96,28 @@ fun updateWidget(context: Context, manager: AppWidgetManager, appWidgetId: Int) 
 
 // ── Bitmap helpers ─────────────────────────────────────────────────────────────
 
-private fun decodeBitmap(context: Context, @DrawableRes resId: Int): Bitmap {
+internal fun decodeBitmap(context: Context, @DrawableRes resId: Int): Bitmap {
     val opts = BitmapFactory.Options().apply { inSampleSize = 2 }
     return BitmapFactory.decodeResource(context.resources, resId, opts)
 }
 
-private fun rotatedBitmap(context: Context, @DrawableRes resId: Int, angleDegrees: Float): Bitmap {
-    val src = decodeBitmap(context, resId)
-    val matrix = Matrix().apply { postRotate(angleDegrees % 360f, src.width / 2f, src.height / 2f) }
-    return Bitmap.createBitmap(src, 0, 0, src.width, src.height, matrix, true)
+/**
+ * Rotates [src] around its centre onto a canvas of the same dimensions.
+ * Using Canvas.rotate keeps output size fixed regardless of angle.
+ * Bitmap.createBitmap(matrix) expands the bounding box at diagonal angles,
+ * which causes the image to visually pulse larger/smaller as it spins.
+ */
+internal fun rotatedBitmap(src: Bitmap, angleDegrees: Float): Bitmap {
+    val out = Bitmap.createBitmap(src.width, src.height, Bitmap.Config.ARGB_8888)
+    Canvas(out).apply {
+        rotate(angleDegrees, src.width / 2f, src.height / 2f)
+        drawBitmap(src, 0f, 0f, Paint(Paint.ANTI_ALIAS_FLAG))
+    }
+    return out
 }
+
+private fun rotatedBitmap(context: Context, @DrawableRes resId: Int, angleDegrees: Float): Bitmap =
+    rotatedBitmap(decodeBitmap(context, resId), angleDegrees)
 
 private fun dimmedBitmap(context: Context, @DrawableRes resId: Int, alpha: Int): Bitmap {
     val src = decodeBitmap(context, resId)
