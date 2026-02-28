@@ -19,7 +19,6 @@
         <activity
             android:name=".presentation.SpinActivity"
             android:exported="false"
-            android:excludeFromRecents="true"
             android:theme="@style/Theme.SpinActivity" />
 
     </application>

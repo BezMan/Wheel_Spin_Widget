@@ -11,8 +11,13 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -35,10 +40,13 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import com.bez.spinwheel_sdk.R
 import com.bez.spinwheel_sdk.SpinWheelSdk
 import com.bez.spinwheel_sdk.domain.model.WheelConfig
 import com.bez.spinwheel_sdk.domain.model.WheelResult
+import com.bez.spinwheel_sdk.data.work.ConfigSyncWorker
 import com.bez.spinwheel_sdk.presentation.widget.WidgetState
 import com.bez.spinwheel_sdk.presentation.widget.updateAllWidgets
 import kotlin.random.Random
@@ -77,6 +85,8 @@ private fun SpinWheelScreen(config: WheelConfig) {
     // Seed from persisted angle so the wheel opens at whatever position was last saved
     // (either by a previous in-app spin or by the home-screen widget animation).
     val wheelAngle = remember { Animatable(widgetState.getRotation()) }
+
+    val sdkState by SpinWheelSdk.spinState.collectAsState()
 
     // When the activity returns to foreground, snap instantly to the latest saved angle.
     // snapTo() completes synchronously with no animation — no flag or listener needed.
@@ -155,6 +165,44 @@ private fun SpinWheelScreen(config: WheelConfig) {
                 style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                 color = Color.White
             )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ── Config push simulation ────────────────────────────────
+            Button(
+                onClick = {
+                    WorkManager.getInstance(context)
+                        .enqueue(OneTimeWorkRequestBuilder<ConfigSyncWorker>().build())
+                },
+                enabled = !isSpinning
+            ) {
+                Text("Simulate Config Push (FCM)")
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ── SDK debug card ────────────────────────────────────────
+            Card(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp),
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surface.copy(alpha = 0.85f)
+                )
+            ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+                    Text(
+                        text = "SDK State",
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                    Text("Spinning:  ${sdkState.isSpinning}")
+                    Text("Angle:     ${"%.1f".format(sdkState.currentAngle)}°")
+                    Text("Source:    ${sdkState.lastSpinSource}")
+                    Text("Config:    ${sdkState.activeConfig?.name ?: "none"}")
+                    Text("Duration:  ${sdkState.activeConfig?.wheel?.rotation?.duration ?: "-"} ms")
+                }
+            }
         }
     }
 }

@@ -6,10 +6,9 @@ import androidx.activity.compose.setContent
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
- * Transparent full-screen activity that plays the in-app spin animation.
- * Launched from [com.example.wheelspinwidget.MainActivity] via the "Open Spin Wheel" button.
- * The widget spins in-place via [com.bez.spinwheel_sdk.presentation.widget.SpinAnimationWorker];
- * this activity is a separate demo entry-point for the Compose UI.
+ * Main (and only) activity of the demo app.
+ * Hosts the spin wheel UI, the SDK state debug card, and the config-push simulation button.
+ * The widget spins in-place via [com.bez.spinwheel_sdk.presentation.widget.SpinAnimationWorker].
  */
 @AndroidEntryPoint
 class SpinActivity : ComponentActivity() {
