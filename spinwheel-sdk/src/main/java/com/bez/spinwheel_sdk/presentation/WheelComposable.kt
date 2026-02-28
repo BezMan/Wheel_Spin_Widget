@@ -1,8 +1,10 @@
 package com.bez.spinwheel_sdk.presentation
 
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -18,7 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -74,25 +75,26 @@ private fun SpinWheelScreen(config: WheelConfig) {
     var isSpinning by remember { mutableStateOf(false) }
     // Seed from persisted angle so the wheel opens at whatever position was last saved
     // (either by a previous in-app spin or by the home-screen widget animation).
-    var accumulated by remember { mutableFloatStateOf(widgetState.getRotation()) }
+    val wheelAngle = remember { Animatable(widgetState.getRotation()) }
 
-    val wheelAngle by animateFloatAsState(
-        targetValue = accumulated,
-        animationSpec = tween(durationMillis = duration, easing = FastOutSlowInEasing),
-        finishedListener = { finalAngle ->
-            isSpinning = false
-            // Persist the normalised resting angle and push a single widget frame so the
-            // home-screen widget reflects the outcome of the in-app spin immediately.
-            widgetState.setRotation(finalAngle % 360f)
-            scope.launch(Dispatchers.IO) { updateAllWidgets(context) }
-        },
-        label = "wheel_rotation"
-    )
+    // When the activity returns to foreground, snap instantly to the latest saved angle.
+    // snapTo() completes synchronously with no animation — no flag or listener needed.
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        if (!isSpinning) {
+            scope.launch { wheelAngle.snapTo(widgetState.getRotation()) }
+        }
+    }
 
     fun triggerSpin() {
         val spins = (rotation.minimumSpins..rotation.maximumSpins).random()
-        accumulated += spins * 360f + Random.nextFloat() * 360f
-        isSpinning = true
+        val target = wheelAngle.value + spins * 360f + Random.nextFloat() * 360f
+        scope.launch {
+            isSpinning = true
+            wheelAngle.animateTo(target, tween(durationMillis = duration, easing = FastOutSlowInEasing))
+            isSpinning = false
+            widgetState.setRotation(wheelAngle.value % 360f)
+            launch(Dispatchers.IO) { updateAllWidgets(context) }
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
@@ -120,7 +122,7 @@ private fun SpinWheelScreen(config: WheelConfig) {
                     contentDescription = null,
                     modifier = Modifier
                         .fillMaxSize()
-                        .graphicsLayer { rotationZ = wheelAngle }
+                        .graphicsLayer { rotationZ = wheelAngle.value }
                 )
 
                 // ── Layer 3: frame — static overlay ──────────────────
