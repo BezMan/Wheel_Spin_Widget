@@ -38,8 +38,7 @@ class SpinAnimationWorker(
                 Random.nextFloat() * 360f
 
         val startAngle = state.getRotation()
-        val frameInterval = 50L          // ~20 fps
-        val frames = (duration / frameInterval).toInt().coerceAtLeast(1)
+        val frameInterval = 50L
 
         val manager = AppWidgetManager.getInstance(context)
         val ids = manager.getAppWidgetIds(
@@ -53,10 +52,19 @@ class SpinAnimationWorker(
         state.setSpinning(true)
         ids.forEach { updateWidget(context, manager, it) }
 
+        // Wall-clock start time — progress is driven by elapsed ms, not frame count.
+        // This guarantees the animation ends after exactly `duration` ms regardless
+        // of how long each IPC frame push takes (frame-count loops silently overrun).
+        val startTime = System.currentTimeMillis()
+
         try {
-            for (frame in 1..frames) {
+            while (true) {
                 val frameStart = System.currentTimeMillis()
-                val angle = startAngle + delta * easeInOutCubic(frame.toFloat() / frames)
+                val elapsed = frameStart - startTime
+                if (elapsed >= duration) break
+
+                val t = easeInOutCubic(elapsed.toFloat() / duration)
+                val angle = startAngle + delta * t
                 state.setRotation(angle)
 
                 // Only push the wheel layer — avoids re-decoding the 3 static assets each frame.
@@ -64,11 +72,12 @@ class SpinAnimationWorker(
                 views.setImageViewBitmap(R.id.widget_wheel, rotatedBitmap(wheelSrc, angle))
                 ids.forEach { manager.partiallyUpdateAppWidget(it, views) }
 
-                // Subtract frame processing time so actual cadence stays close to frameInterval.
                 val remaining = frameInterval - (System.currentTimeMillis() - frameStart)
-                if (frame < frames && remaining > 0) delay(remaining)
+                if (remaining > 0) delay(remaining)
             }
-            state.setRotation((startAngle + delta) % 360f)
+            // Snap to exact final angle so persisted state is always clean.
+            val finalAngle = (startAngle + delta) % 360f
+            state.setRotation(finalAngle)
         } finally {
             // Runs even on CancellationException so the widget never stays permanently locked.
             state.setSpinning(false)

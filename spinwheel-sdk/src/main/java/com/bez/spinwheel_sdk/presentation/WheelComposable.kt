@@ -21,6 +21,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -28,6 +29,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -35,7 +37,11 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import com.bez.spinwheel_sdk.R
 import com.bez.spinwheel_sdk.domain.model.WheelConfig
 import com.bez.spinwheel_sdk.domain.model.WheelResult
+import com.bez.spinwheel_sdk.presentation.widget.WidgetState
+import com.bez.spinwheel_sdk.presentation.widget.updateAllWidgets
 import kotlin.random.Random
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 /** Entry-point composable used by [SpinActivity]. */
 @Composable
@@ -60,13 +66,26 @@ private fun SpinWheelScreen(config: WheelConfig) {
     val duration = config.wheel.rotation.duration.coerceIn(1000, 5000)
     val rotation = config.wheel.rotation
 
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    // WidgetState is the single source of truth for resting angle, shared with the widget.
+    val widgetState = remember { WidgetState(context) }
+
     var isSpinning by remember { mutableStateOf(false) }
-    var accumulated by remember { mutableFloatStateOf(0f) }
+    // Seed from persisted angle so the wheel opens at whatever position was last saved
+    // (either by a previous in-app spin or by the home-screen widget animation).
+    var accumulated by remember { mutableFloatStateOf(widgetState.getRotation()) }
 
     val wheelAngle by animateFloatAsState(
         targetValue = accumulated,
         animationSpec = tween(durationMillis = duration, easing = FastOutSlowInEasing),
-        finishedListener = { isSpinning = false },
+        finishedListener = { finalAngle ->
+            isSpinning = false
+            // Persist the normalised resting angle and push a single widget frame so the
+            // home-screen widget reflects the outcome of the in-app spin immediately.
+            widgetState.setRotation(finalAngle % 360f)
+            scope.launch(Dispatchers.IO) { updateAllWidgets(context) }
+        },
         label = "wheel_rotation"
     )
 
