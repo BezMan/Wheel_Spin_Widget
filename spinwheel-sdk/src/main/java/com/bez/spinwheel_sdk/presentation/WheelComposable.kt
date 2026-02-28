@@ -36,6 +36,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.bez.spinwheel_sdk.R
+import com.bez.spinwheel_sdk.SpinWheelSdk
 import com.bez.spinwheel_sdk.domain.model.WheelConfig
 import com.bez.spinwheel_sdk.domain.model.WheelResult
 import com.bez.spinwheel_sdk.presentation.widget.WidgetState
@@ -90,9 +91,12 @@ private fun SpinWheelScreen(config: WheelConfig) {
         val target = wheelAngle.value + spins * 360f + Random.nextFloat() * 360f
         scope.launch {
             isSpinning = true
+            SpinWheelSdk.onAppSpinStarted()
             wheelAngle.animateTo(target, tween(durationMillis = duration, easing = FastOutSlowInEasing))
             isSpinning = false
-            widgetState.setRotation(wheelAngle.value % 360f)
+            val finalAngle = wheelAngle.value % 360f
+            widgetState.setRotation(finalAngle)
+            SpinWheelSdk.onAppSpinCompleted(finalAngle)
             launch(Dispatchers.IO) { updateAllWidgets(context) }
         }
     }

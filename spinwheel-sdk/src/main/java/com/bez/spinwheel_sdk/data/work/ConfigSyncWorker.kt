@@ -4,6 +4,8 @@ import android.content.Context
 import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
+import com.bez.spinwheel_sdk.SpinWheelSdk
+import com.bez.spinwheel_sdk.domain.model.WheelResult
 import com.bez.spinwheel_sdk.domain.repository.ConfigRepository
 import com.bez.spinwheel_sdk.presentation.widget.updateAllWidgets
 import dagger.assisted.Assisted
@@ -21,7 +23,8 @@ class ConfigSyncWorker @AssistedInject constructor(
 ) : CoroutineWorker(appContext, params) {
 
     override suspend fun doWork(): Result {
-        repo.fetchConfig()
+        val result = repo.fetchConfig()
+        if (result is WheelResult.Success) SpinWheelSdk.onConfigUpdated(result.data)
         updateAllWidgets(appContext)
         return Result.success()
     }

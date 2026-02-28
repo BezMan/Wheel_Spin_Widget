@@ -7,6 +7,7 @@ import android.widget.RemoteViews
 import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 import com.bez.spinwheel_sdk.R
+import com.bez.spinwheel_sdk.SpinWheelSdk
 import com.bez.spinwheel_sdk.data.prefs.ConfigPrefs
 import kotlinx.coroutines.delay
 import kotlin.math.pow
@@ -50,6 +51,7 @@ class SpinAnimationWorker(
         val wheelSrc = decodeBitmap(context, R.drawable.wheel)
 
         state.setSpinning(true)
+        SpinWheelSdk.onWidgetSpinStarted()
         ids.forEach { updateWidget(context, manager, it) }
 
         // Wall-clock start time — progress is driven by elapsed ms, not frame count.
@@ -78,6 +80,7 @@ class SpinAnimationWorker(
             // Snap to exact final angle so persisted state is always clean.
             val finalAngle = (startAngle + delta) % 360f
             state.setRotation(finalAngle)
+            SpinWheelSdk.onWidgetSpinCompleted(finalAngle)
         } finally {
             // Runs even on CancellationException so the widget never stays permanently locked.
             state.setSpinning(false)
