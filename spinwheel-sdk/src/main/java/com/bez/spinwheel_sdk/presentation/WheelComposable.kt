@@ -1,8 +1,6 @@
 package com.bez.spinwheel_sdk.presentation
 
 import androidx.compose.animation.core.Animatable
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.tween
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.compose.foundation.Image
@@ -51,9 +49,12 @@ import com.bez.spinwheel_sdk.domain.model.WheelResult
 import com.bez.spinwheel_sdk.data.work.ConfigSyncWorker
 import com.bez.spinwheel_sdk.presentation.widget.WidgetState
 import com.bez.spinwheel_sdk.presentation.widget.updateAllWidgets
+import kotlin.math.pow
 import kotlin.random.Random
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** Entry-point composable used by [SpinActivity]. */
 @Composable
@@ -121,11 +122,25 @@ private fun SpinWheelScreen(config: WheelConfig) {
 
     fun triggerSpin() {
         val spins = (rotation.minimumSpins..rotation.maximumSpins).random()
-        val target = wheelAngle.value + spins * 360f + Random.nextFloat() * 360f
+        val delta = spins * 360f + Random.nextFloat() * 360f
+        val startAngle = wheelAngle.value
         scope.launch {
             isSpinning = true
             SpinWheelSdk.onAppSpinStarted()
-            wheelAngle.animateTo(target, tween(durationMillis = duration, easing = FastOutSlowInEasing))
+            // Run on Default so the animation continues when the screen goes to the background.
+            // The Compose frame clock would pause in background; wall-clock timing does not.
+            withContext(Dispatchers.Default) {
+                val startTime = System.currentTimeMillis()
+                while (true) {
+                    val elapsed = System.currentTimeMillis() - startTime
+                    if (elapsed >= duration) break
+                    val t = spinEasing(elapsed.toFloat() / duration)
+                    wheelAngle.snapTo(startAngle + delta * t)
+                    delay(16L)
+                }
+                wheelAngle.snapTo(startAngle + delta)
+            }
+            // Resumed on Main after withContext.
             isSpinning = false
             val finalAngle = wheelAngle.value % 360f
             widgetState.setRotation(finalAngle)
@@ -236,3 +251,8 @@ private fun LoadingOverlay() {
         CircularProgressIndicator()
     }
 }
+
+/** Ease-in-out cubic — matches the curve used by [SpinAnimationWorker]. */
+private fun spinEasing(t: Float): Float =
+    if (t < 0.5f) 4f * t * t * t
+    else 1f - (-2f * t + 2f).pow(3) / 2f

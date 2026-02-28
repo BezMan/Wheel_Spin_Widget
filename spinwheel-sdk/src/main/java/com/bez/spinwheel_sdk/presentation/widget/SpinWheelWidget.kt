@@ -10,6 +10,7 @@ import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Paint
+import android.view.View
 import android.widget.RemoteViews
 import androidx.annotation.DrawableRes
 import androidx.work.OneTimeWorkRequestBuilder
@@ -68,18 +69,28 @@ fun updateAllWidgets(context: Context) {
 
 fun updateWidget(context: Context, manager: AppWidgetManager, appWidgetId: Int) {
     val state = WidgetState(context)
-    val isSpinning = state.isSpinning()
-
-    val wheelBitmap = rotatedBitmap(context, R.drawable.wheel, state.getRotation())
-    val spinBitmap = if (isSpinning) {
-        dimmedBitmap(context, R.drawable.wheel_spin, alpha = 90)
-    } else {
-        decodeBitmap(context, R.drawable.wheel_spin)
-    }
+    val isWidgetSpinning = state.isSpinning()
+    val isAppSpinning = state.isAppSpinning()
+    val anySpinning = isWidgetSpinning || isAppSpinning
 
     val views = RemoteViews(context.packageName, R.layout.widget_layout)
-    views.setImageViewBitmap(R.id.widget_wheel, wheelBitmap)
-    views.setImageViewBitmap(R.id.widget_spin_btn, spinBitmap)
+
+    if (isAppSpinning) {
+        // App spin in progress — dim the whole wheel area and hide the spin button
+        // so the widget shows a clear "busy" state rather than a frozen wheel.
+        views.setImageViewBitmap(R.id.widget_wheel, dimmedBitmap(context, R.drawable.wheel, alpha = 60))
+        views.setViewVisibility(R.id.widget_spin_btn, View.INVISIBLE)
+    } else {
+        val wheelBitmap = rotatedBitmap(context, R.drawable.wheel, state.getRotation())
+        val spinBitmap = if (isWidgetSpinning) {
+            dimmedBitmap(context, R.drawable.wheel_spin, alpha = 90)
+        } else {
+            decodeBitmap(context, R.drawable.wheel_spin)
+        }
+        views.setImageViewBitmap(R.id.widget_wheel, wheelBitmap)
+        views.setImageViewBitmap(R.id.widget_spin_btn, spinBitmap)
+        views.setViewVisibility(R.id.widget_spin_btn, View.VISIBLE)
+    }
 
     // Wire up the tap — onReceive guards against re-spin while already spinning.
     val spinIntent = Intent(ACTION_SPIN).apply {
@@ -90,6 +101,9 @@ fun updateWidget(context: Context, manager: AppWidgetManager, appWidgetId: Int) 
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
     views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
+
+    // Disable tap while any spin is running.
+    if (anySpinning) views.setOnClickPendingIntent(R.id.widget_root, null)
 
     manager.updateAppWidget(appWidgetId, views)
 }
