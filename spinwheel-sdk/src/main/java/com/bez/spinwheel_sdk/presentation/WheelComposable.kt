@@ -29,6 +29,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -43,6 +44,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
 import com.bez.spinwheel_sdk.R
+import com.bez.spinwheel_sdk.SpinSource
 import com.bez.spinwheel_sdk.SpinWheelSdk
 import com.bez.spinwheel_sdk.domain.model.WheelConfig
 import com.bez.spinwheel_sdk.domain.model.WheelResult
@@ -95,6 +97,27 @@ private fun SpinWheelScreen(config: WheelConfig) {
             scope.launch { wheelAngle.snapTo(widgetState.getRotation()) }
         }
     }
+
+    // Push live app angle into the SDK state on every animation frame so all
+    // observers (debug card, external collectors) see a continuously updated angle.
+    LaunchedEffect(isSpinning) {
+        if (!isSpinning) return@LaunchedEffect
+        snapshotFlow { wheelAngle.value }.collect { angle ->
+            SpinWheelSdk.onAppAngleChanged(angle)
+        }
+    }
+
+    // Mirror live widget angle into wheelAngle on every SDK frame emission.
+    // Only active when the widget is spinning and the app is not — so a local
+    // in-app spin is never interrupted.
+    LaunchedEffect(Unit) {
+        SpinWheelSdk.spinState.collect { state ->
+            if (state.isSpinning && state.lastSpinSource == SpinSource.WIDGET && !isSpinning) {
+                wheelAngle.snapTo(state.currentAngle)
+            }
+        }
+    }
+
 
     fun triggerSpin() {
         val spins = (rotation.minimumSpins..rotation.maximumSpins).random()
@@ -197,7 +220,7 @@ private fun SpinWheelScreen(config: WheelConfig) {
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                     Text("Spinning:  ${sdkState.isSpinning}")
-                    Text("Angle:     ${"%.1f".format(sdkState.currentAngle)}°")
+                    Text("Angle:     ${"%.1f".format(sdkState.currentAngle % 360f)}°")
                     Text("Source:    ${sdkState.lastSpinSource}")
                     Text("Config:    ${sdkState.activeConfig?.name ?: "none"}")
                     Text("Duration:  ${sdkState.activeConfig?.wheel?.rotation?.duration ?: "-"} ms")

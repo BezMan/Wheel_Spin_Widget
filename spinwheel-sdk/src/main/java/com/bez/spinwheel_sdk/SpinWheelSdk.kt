@@ -71,12 +71,21 @@ object SpinWheelSdk {
         _spinState.update { it.copy(isSpinning = true, lastSpinSource = SpinSource.APP) }
     }
 
+    internal fun onAppAngleChanged(angle: Float) {
+        _spinState.update { it.copy(currentAngle = angle) }
+    }
+
     internal fun onAppSpinCompleted(angle: Float) {
         _spinState.update { it.copy(isSpinning = false, currentAngle = angle) }
     }
 
     internal fun onWidgetSpinStarted() {
         _spinState.update { it.copy(isSpinning = true, lastSpinSource = SpinSource.WIDGET) }
+    }
+
+    // Called on every animation frame so observers can mirror the live angle.
+    internal fun onWidgetAngleChanged(angle: Float) {
+        _spinState.update { it.copy(currentAngle = angle) }
     }
 
     internal fun onWidgetSpinCompleted(angle: Float) {

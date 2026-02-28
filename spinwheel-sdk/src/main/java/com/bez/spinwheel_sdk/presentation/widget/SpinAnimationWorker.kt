@@ -68,6 +68,7 @@ class SpinAnimationWorker(
                 val t = easeInOutCubic(elapsed.toFloat() / duration)
                 val angle = startAngle + delta * t
                 state.setRotation(angle)
+                SpinWheelSdk.onWidgetAngleChanged(angle)
 
                 // Only push the wheel layer — avoids re-decoding the 3 static assets each frame.
                 val views = RemoteViews(context.packageName, R.layout.widget_layout)
