@@ -9,7 +9,7 @@ A Kotlin Android library (`spinwheel-sdk`) that renders a spin wheel as a home-s
 ```
 WheelSpinWidget/
 ├── app/                        # Demo consumer app
-└── spinwheel-sdk/              # Deliverable library (AAR)
+└── spinwheel-sdk/              # Deliverable library (Maven lib)
     └── src/main/java/com/bez/spinwheel_sdk/
         ├── SpinWheelSdk.kt             # Public singleton entry point
         ├── SpinWheelState.kt           # Public observable state
@@ -102,7 +102,7 @@ Widget and in-app wheel stay in sync: the app snaps to the widget's final angle 
 
 **2. Remote image loading** — Assets are local drawables.
 
-**3. React Native wrapper** — Simulated by app wrapper around the .aar file
+**3. React Native wrapper** — Simulated by app wrapper around the Maven lib file
 
 ---
 
@@ -117,7 +117,7 @@ Widget and in-app wheel stay in sync: the app snaps to the widget's final angle 
 
 ### SDK distribution
 
-`:app` consumes the SDK as a published Maven artifact (`maven-local/`) rather than a Gradle module dependency — demonstrating the real SDK–consumer boundary:
+`:app` depends on the SDK via Maven coordinates — not a Gradle module reference. `maven-local/` is a local Maven repository.
 
 ```kotlin
 implementation("com.bez:spinwheel-sdk:1.0.0")  // app/build.gradle.kts
