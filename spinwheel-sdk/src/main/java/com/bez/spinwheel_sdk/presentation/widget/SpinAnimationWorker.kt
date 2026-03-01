@@ -39,7 +39,7 @@ class SpinAnimationWorker(
                 Random.nextFloat() * 360f
 
         val startAngle = state.getRotation()
-        val frameInterval = 50L
+        val frameInterval = 33L // ~30 fps — practical ceiling for RemoteViews IPC
 
         val manager = AppWidgetManager.getInstance(context)
         val ids = manager.getAppWidgetIds(

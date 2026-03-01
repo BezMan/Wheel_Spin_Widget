@@ -1,10 +1,17 @@
 package com.bez.spinwheel_sdk
 
+import android.appwidget.AppWidgetManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.SharedPreferences
+import android.graphics.Bitmap
+import android.widget.RemoteViews
 import com.bez.spinwheel_sdk.data.prefs.ConfigPrefs
 import com.bez.spinwheel_sdk.domain.model.WheelConfig
+import com.bez.spinwheel_sdk.presentation.widget.SpinWheelWidgetProvider
 import com.bez.spinwheel_sdk.presentation.widget.WidgetState
+import com.bez.spinwheel_sdk.presentation.widget.decodeBitmap
+import com.bez.spinwheel_sdk.presentation.widget.rotatedBitmap
 import com.bez.spinwheel_sdk.presentation.widget.updateAllWidgets
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -44,6 +51,11 @@ object SpinWheelSdk {
     private var appContext: Context? = null
     private var sdkScope: CoroutineScope? = null
     private var rotationListener: SharedPreferences.OnSharedPreferenceChangeListener? = null
+
+    // Cached decoded wheel bitmap — reused across all app-spin frame pushes to the widget.
+    @Volatile private var wheelBitmapCache: Bitmap? = null
+    private var lastAppFrameMs = 0L
+    private const val APP_FRAME_INTERVAL_MS = 33L // ~30 fps, matching widget animation rate
 
     /**
      * Initialises the SDK. Safe to call multiple times — subsequent calls are no-ops.
@@ -99,6 +111,8 @@ object SpinWheelSdk {
         sdkScope?.cancel()
         sdkScope = null
         appContext = null
+        wheelBitmapCache = null
+        lastAppFrameMs = 0L
         _spinState.value = SpinWheelState()
         initialized = false
     }
@@ -107,7 +121,6 @@ object SpinWheelSdk {
 
     internal fun onAppSpinStarted() {
         _spinState.update { it.copy(isSpinning = true, lastSpinSource = SpinSource.APP) }
-        // Mark widget so it shows a placeholder immediately.
         appContext?.let { ctx ->
             WidgetState(ctx).setAppSpinning(true)
             sdkScope?.launch(Dispatchers.IO) { updateAllWidgets(ctx) }
@@ -116,6 +129,24 @@ object SpinWheelSdk {
 
     internal fun onAppAngleChanged(angle: Float) {
         _spinState.update { it.copy(currentAngle = angle) }
+        // Push live angle to the widget at ~30 fps — same rate as SpinAnimationWorker.
+        val now = System.currentTimeMillis()
+        if (now - lastAppFrameMs >= APP_FRAME_INTERVAL_MS) {
+            lastAppFrameMs = now
+            appContext?.let { ctx ->
+                sdkScope?.launch(Dispatchers.IO) { pushAppSpinFrame(ctx, angle) }
+            }
+        }
+    }
+
+    private fun pushAppSpinFrame(context: Context, angle: Float) {
+        val manager = AppWidgetManager.getInstance(context)
+        val ids = manager.getAppWidgetIds(ComponentName(context, SpinWheelWidgetProvider::class.java))
+        if (ids.isEmpty()) return
+        val src = wheelBitmapCache ?: decodeBitmap(context, R.drawable.wheel).also { wheelBitmapCache = it }
+        val views = RemoteViews(context.packageName, R.layout.widget_layout)
+        views.setImageViewBitmap(R.id.widget_wheel, rotatedBitmap(src, angle))
+        ids.forEach { manager.partiallyUpdateAppWidget(it, views) }
     }
 
     internal fun onAppSpinCompleted(angle: Float) {

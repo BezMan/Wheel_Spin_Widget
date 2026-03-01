@@ -49,7 +49,7 @@ class SpinWheelWidgetProvider : AppWidgetProvider() {
         if (intent.action != ACTION_SPIN) return
 
         val state = WidgetState(context)
-        if (state.isWidgetSpinning()) return
+        if (state.isWidgetSpinning() || state.isAppSpinning()) return
 
         // Seed config from assets if widget tapped before any FCM push simulation.
         if (ConfigPrefs(context).load() == null) {
@@ -79,24 +79,18 @@ fun updateWidget(context: Context, manager: AppWidgetManager, appWidgetId: Int) 
 
     val views = RemoteViews(context.packageName, R.layout.widget_layout)
 
-    if (isAppSpinning) {
-        // App spin in progress — dim the whole wheel area and hide the spin button
-        // so the widget shows a clear "busy" state rather than a frozen wheel.
-        views.setImageViewBitmap(R.id.widget_wheel, dimmedBitmap(context, R.drawable.wheel, alpha = 60))
-        views.setViewVisibility(R.id.widget_spin_btn, View.INVISIBLE)
-    } else {
-        val wheelBitmap = rotatedBitmap(context, R.drawable.wheel, state.getRotation())
-        val spinBitmap = if (isWidgetSpinning) {
-            dimmedBitmap(context, R.drawable.wheel_spin, alpha = 90)
-        } else {
-            decodeBitmap(context, R.drawable.wheel_spin)
-        }
-        views.setImageViewBitmap(R.id.widget_wheel, wheelBitmap)
-        views.setImageViewBitmap(R.id.widget_spin_btn, spinBitmap)
-        views.setViewVisibility(R.id.widget_spin_btn, View.VISIBLE)
-    }
+    // Wheel always shows the current angle; partial updates push frames during animation.
+    views.setImageViewBitmap(R.id.widget_wheel, rotatedBitmap(context, R.drawable.wheel, state.getRotation()))
 
-    // Wire up the tap — onReceive guards against re-spin while already spinning.
+    // Spin button: always visible, dimmed while any spin is in progress.
+    views.setImageViewBitmap(
+        R.id.widget_spin_btn,
+        if (anySpinning) dimmedBitmap(context, R.drawable.wheel_spin, alpha = 90)
+        else decodeBitmap(context, R.drawable.wheel_spin)
+    )
+    views.setViewVisibility(R.id.widget_spin_btn, View.VISIBLE)
+
+    // Only the spin button is tappable — not the whole widget.
     val spinIntent = Intent(ACTION_SPIN).apply {
         component = ComponentName(context, SpinWheelWidgetProvider::class.java)
     }
@@ -104,10 +98,7 @@ fun updateWidget(context: Context, manager: AppWidgetManager, appWidgetId: Int) 
         context, 0, spinIntent,
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
-    views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
-
-    // Disable tap while any spin is running.
-    if (anySpinning) views.setOnClickPendingIntent(R.id.widget_root, null)
+    views.setOnClickPendingIntent(R.id.widget_spin_btn, if (anySpinning) null else pendingIntent)
 
     manager.updateAppWidget(appWidgetId, views)
 }
