@@ -77,7 +77,7 @@ object SpinWheelSdk {
         val listener = SharedPreferences.OnSharedPreferenceChangeListener { _, key ->
             if (key == WidgetState.KEY_ROTATION) {
                 val state = WidgetState(appCtx)
-                if (!state.isSpinning() && !state.isAppSpinning()) {
+                if (!state.isWidgetSpinning() && !state.isAppSpinning()) {
                     sdkScope?.launch(Dispatchers.IO) { updateAllWidgets(appCtx) }
                 }
             }

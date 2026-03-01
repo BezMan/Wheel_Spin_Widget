@@ -6,9 +6,8 @@ import androidx.activity.compose.setContent
 import dagger.hilt.android.AndroidEntryPoint
 
 /**
- * Main (and only) activity of the demo app.
- * Hosts the spin wheel UI, the SDK state debug card, and the config-push simulation button.
- * The widget spins in-place via [com.bez.spinwheel_sdk.presentation.widget.SpinAnimationWorker].
+ * SDK-provided activity that hosts the spin wheel Compose UI, Launched by the consumer app.
+ * The widget spins independently in-place via [com.bez.spinwheel_sdk.presentation.widget.SpinAnimationWorker].
  */
 @AndroidEntryPoint
 class SpinActivity : ComponentActivity() {

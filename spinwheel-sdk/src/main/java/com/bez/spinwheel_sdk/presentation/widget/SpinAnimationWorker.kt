@@ -30,7 +30,7 @@ class SpinAnimationWorker(
         val state = WidgetState(context)
 
         // Guard — a previous worker may still be running.
-        if (state.isSpinning()) return Result.success()
+        if (state.isWidgetSpinning()) return Result.success()
 
         val config = ConfigPrefs(context).load() ?: return Result.failure()
         val rotation = config.wheel.rotation
@@ -50,7 +50,7 @@ class SpinAnimationWorker(
         // Decode wheel source once — every frame reuses this bitmap for rotation.
         val wheelSrc = decodeBitmap(context, R.drawable.wheel)
 
-        state.setSpinning(true)
+        state.setWidgetSpinning(true)
         SpinWheelSdk.onWidgetSpinStarted()
         ids.forEach { updateWidget(context, manager, it) }
 
@@ -84,7 +84,7 @@ class SpinAnimationWorker(
             SpinWheelSdk.onWidgetSpinCompleted(finalAngle)
         } finally {
             // Runs even on CancellationException so the widget never stays permanently locked.
-            state.setSpinning(false)
+            state.setWidgetSpinning(false)
             ids.forEach { updateWidget(context, manager, it) }
         }
 

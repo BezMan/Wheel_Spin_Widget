@@ -19,15 +19,19 @@ import com.bez.spinwheel_sdk.R
 import com.bez.spinwheel_sdk.data.mock.MockConfigRepository
 import com.bez.spinwheel_sdk.data.prefs.ConfigPrefs
 import kotlinx.coroutines.runBlocking
+import androidx.core.graphics.createBitmap
 
 private const val ACTION_SPIN = "com.bez.spinwheel_sdk.ACTION_SPIN"
 
-// ── Provider ───────────────────────────────────────────────────────────────────
-
+/**
+ * Home-screen widget entry point. The system calls [onUpdate] when the widget is placed or
+ * refreshed, and [onReceive] for every broadcast — including [ACTION_SPIN] taps, which
+ * seed config if needed and hand off the animation to [SpinAnimationWorker].
+ */
 class SpinWheelWidgetProvider : AppWidgetProvider() {
 
     override fun onEnabled(context: Context) {
-        WidgetState(context).setSpinning(false)
+        WidgetState(context).setWidgetSpinning(false)
     }
 
     override fun onUpdate(
@@ -45,7 +49,7 @@ class SpinWheelWidgetProvider : AppWidgetProvider() {
         if (intent.action != ACTION_SPIN) return
 
         val state = WidgetState(context)
-        if (state.isSpinning()) return
+        if (state.isWidgetSpinning()) return
 
         // Seed config from assets if widget tapped before any FCM push simulation.
         if (ConfigPrefs(context).load() == null) {
@@ -69,7 +73,7 @@ fun updateAllWidgets(context: Context) {
 
 fun updateWidget(context: Context, manager: AppWidgetManager, appWidgetId: Int) {
     val state = WidgetState(context)
-    val isWidgetSpinning = state.isSpinning()
+    val isWidgetSpinning = state.isWidgetSpinning()
     val isAppSpinning = state.isAppSpinning()
     val anySpinning = isWidgetSpinning || isAppSpinning
 
@@ -122,7 +126,7 @@ internal fun decodeBitmap(context: Context, @DrawableRes resId: Int): Bitmap {
  * which causes the image to visually pulse larger/smaller as it spins.
  */
 internal fun rotatedBitmap(src: Bitmap, angleDegrees: Float): Bitmap {
-    val out = Bitmap.createBitmap(src.width, src.height, Bitmap.Config.ARGB_8888)
+    val out = createBitmap(src.width, src.height)
     Canvas(out).apply {
         rotate(angleDegrees, src.width / 2f, src.height / 2f)
         drawBitmap(src, 0f, 0f, Paint(Paint.ANTI_ALIAS_FLAG))
@@ -135,7 +139,7 @@ private fun rotatedBitmap(context: Context, @DrawableRes resId: Int, angleDegree
 
 private fun dimmedBitmap(context: Context, @DrawableRes resId: Int, alpha: Int): Bitmap {
     val src = decodeBitmap(context, resId)
-    val out = Bitmap.createBitmap(src.width, src.height, Bitmap.Config.ARGB_8888)
+    val out = createBitmap(src.width, src.height)
     Canvas(out).drawBitmap(src, 0f, 0f, Paint().apply { this.alpha = alpha })
     return out
 }
