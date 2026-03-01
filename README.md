@@ -2,6 +2,10 @@
 
 A Kotlin Android library (`spinwheel-sdk`) that renders a spin wheel as a home-screen AppWidget and a full-screen Compose UI. A thin demo app (`:app`) exercises the SDK.
 
+| In-app spin wheel | Home-screen widget |
+|:-----------------:|:------------------:|
+| ![In-app spin wheel](screenshots/Screenshot_20260301_203558.png) | ![Home-screen widget](screenshots/Screenshot_20260301_203631.png) |
+
 ---
 
 ## Project Structure
