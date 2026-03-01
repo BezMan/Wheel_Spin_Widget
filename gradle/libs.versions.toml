@@ -1,4 +1,5 @@
 [versions]
+spinwheelSdk = "1.0.0"
 agp = "9.0.1"
 coreKtx = "1.17.0"
 junit = "4.13.2"
@@ -19,6 +20,7 @@ hiltWork = "1.2.0"
 ksp = "2.0.21-1.0.25"
 
 [libraries]
+spinwheel-sdk = { module = "com.bez:spinwheel-sdk", version.ref = "spinwheelSdk" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }

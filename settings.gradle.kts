@@ -16,9 +16,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven { url = uri("maven-local") }
     }
 }
 
 rootProject.name = "Wheel Spin Widget"
 include(":app")
-include(":spinwheel-sdk")

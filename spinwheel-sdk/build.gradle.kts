@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.hilt)
     alias(libs.plugins.ksp)
+    `maven-publish`
 }
 
 android {
@@ -33,6 +34,31 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+
+    publishing {
+        singleVariant("release") {
+            withSourcesJar()
+        }
+    }
+}
+
+afterEvaluate {
+    publishing {
+        publications {
+            create<MavenPublication>("release") {
+                from(components["release"])
+                groupId = "com.bez"
+                artifactId = "spinwheel-sdk"
+                version = "1.0.0"
+            }
+        }
+        repositories {
+            maven {
+                name = "ProjectLocal"
+                url = uri(rootProject.layout.projectDirectory.dir("maven-local"))
+            }
+        }
     }
 }
 
