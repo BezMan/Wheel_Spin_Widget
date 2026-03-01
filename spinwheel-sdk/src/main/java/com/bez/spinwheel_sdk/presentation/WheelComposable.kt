@@ -90,6 +90,7 @@ private fun SpinWheelScreen(config: WheelConfig) {
     val wheelAngle = remember { Animatable(widgetState.getRotation()) }
 
     val sdkState by SpinWheelSdk.spinState.collectAsState()
+    val anySpinning = isSpinning || sdkState.isSpinning
 
     // When the activity returns to foreground, snap instantly to the latest saved angle.
     // snapTo() completes synchronously with no animation — no flag or listener needed.
@@ -184,14 +185,14 @@ private fun SpinWheelScreen(config: WheelConfig) {
                     modifier = Modifier.fillMaxSize()
                 )
 
-                // ── Layer 4: spin button — disabled while spinning ────
+                // ── Layer 4: spin button — disabled while any spin is in progress ──
                 Image(
                     painter = painterResource(R.drawable.wheel_spin),
-                    contentDescription = if (isSpinning) null else "Tap to spin",
+                    contentDescription = if (anySpinning) null else "Tap to spin",
                     modifier = Modifier
                         .size(96.dp)
-                        .alpha(if (isSpinning) 0.35f else 1f)
-                        .clickable(enabled = !isSpinning) { triggerSpin() }
+                        .alpha(if (anySpinning) 0.35f else 1f)
+                        .clickable(enabled = !anySpinning) { triggerSpin() }
                 )
             }
 
@@ -212,7 +213,7 @@ private fun SpinWheelScreen(config: WheelConfig) {
                     WorkManager.getInstance(context)
                         .enqueue(OneTimeWorkRequestBuilder<ConfigSyncWorker>().build())
                 },
-                enabled = !isSpinning
+                enabled = !anySpinning
             ) {
                 Text("Simulate Config Push (FCM)")
             }
