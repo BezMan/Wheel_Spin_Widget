@@ -90,6 +90,9 @@ fun updateWidget(context: Context, manager: AppWidgetManager, appWidgetId: Int) 
     )
     views.setViewVisibility(R.id.widget_spin_btn, View.VISIBLE)
 
+    // Explicitly clear root click so no stale intent survives a widget update.
+    views.setOnClickPendingIntent(R.id.widget_root, null)
+
     // Only the spin button is tappable — not the whole widget.
     val spinIntent = Intent(ACTION_SPIN).apply {
         component = ComponentName(context, SpinWheelWidgetProvider::class.java)
