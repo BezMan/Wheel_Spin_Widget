@@ -57,11 +57,12 @@ presentation/  → Compose UI, ViewModel, AppWidget, animation workers.
 
 | ID              | `duration` | `minimumSpins` | `maximumSpins` |
 |-----------------|------------|----------------|----------------|
-| `wheel_fast`    | 1000 ms    | 3              | 5              |
-| `wheel_minimal` | 2500 ms    | 2              | 4              |
-| `wheel_slow`    | 5000 ms    | 5              | 8              |
+| `wheel_fast`    | 1000 ms    | 1              | 1              |
+| `wheel_minimal` | 2500 ms    | 2              | 2              |
+| `wheel_slow`    | 5000 ms    | 3              | 3              |
 
-Duration is clamped to `[1000, 2500, 5000]` ms and shown in the UI as "Spin duration: X ms".
+`duration` is clamped to `[1000, 2500, 5000]` ms and shown in the UI as "Spin duration: X ms". 
+`maximumSpins` sets the starting spin counter shown in the UI.
 
 ---
 
