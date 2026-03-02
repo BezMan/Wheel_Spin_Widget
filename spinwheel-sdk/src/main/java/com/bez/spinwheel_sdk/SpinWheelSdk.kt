@@ -72,11 +72,16 @@ object SpinWheelSdk {
         val widgetState = WidgetState(appCtx)
         val config = ConfigPrefs(appCtx).load()
 
+        // Seed spin counter: use persisted value, or initialise from config if first launch.
+        val spinsRemaining = widgetState.getSpinsRemaining()
+            ?: config?.wheel?.rotation?.maximumSpins?.also { widgetState.setSpinsRemaining(it) }
+
         _spinState.value = SpinWheelState(
             isSpinning = false,   // never inherit a stale spinning flag on cold start
             currentAngle = widgetState.getRotation(),
             activeConfig = config,
-            lastSpinSource = SpinSource.NONE
+            lastSpinSource = SpinSource.NONE,
+            spinsRemaining = spinsRemaining
         )
 
         // Clear any stale app-spinning flag left by a previous crash.
@@ -150,8 +155,8 @@ object SpinWheelSdk {
     }
 
     internal fun onAppSpinCompleted(angle: Float) {
-        _spinState.update { it.copy(isSpinning = false, currentAngle = angle) }
-        // Clear placeholder — widget will be redrawn by the rotation prefs listener.
+        val newSpins = decrementSpins()
+        _spinState.update { it.copy(isSpinning = false, currentAngle = angle, spinsRemaining = newSpins ?: it.spinsRemaining) }
         appContext?.let { ctx -> WidgetState(ctx).setAppSpinning(false) }
     }
 
@@ -164,10 +169,26 @@ object SpinWheelSdk {
     }
 
     internal fun onWidgetSpinCompleted(angle: Float) {
-        _spinState.update { it.copy(isSpinning = false, currentAngle = angle) }
+        val newSpins = decrementSpins()
+        _spinState.update { it.copy(isSpinning = false, currentAngle = angle, spinsRemaining = newSpins ?: it.spinsRemaining) }
     }
 
     internal fun onConfigUpdated(config: WheelConfig) {
-        _spinState.update { it.copy(activeConfig = config) }
+        val newCount = config.wheel.rotation.maximumSpins
+        appContext?.let { WidgetState(it).setSpinsRemaining(newCount) }
+        _spinState.update { it.copy(activeConfig = config, spinsRemaining = newCount) }
+    }
+
+    /**
+     * Decrements the persistent spin counter by 1.
+     * Returns the new count, or null if the counter was not yet initialised.
+     */
+    private fun decrementSpins(): Int? {
+        val ctx = appContext ?: return null
+        val ws = WidgetState(ctx)
+        val current = ws.getSpinsRemaining() ?: return null
+        val newCount = (current - 1).coerceAtLeast(0)
+        ws.setSpinsRemaining(newCount)
+        return newCount
     }
 }

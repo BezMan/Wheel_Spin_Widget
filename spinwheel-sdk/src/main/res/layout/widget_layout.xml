@@ -48,4 +48,20 @@
 
     </FrameLayout>
 
+    <!-- Spins remaining counter -->
+    <TextView
+        android:id="@+id/widget_spins_remaining"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="8dp"
+        android:textColor="@android:color/white"
+        android:textSize="11sp"
+        android:textStyle="bold"
+        android:shadowColor="#AA000000"
+        android:shadowDx="1"
+        android:shadowDy="1"
+        android:shadowRadius="2"
+        android:text="" />
+
 </FrameLayout>

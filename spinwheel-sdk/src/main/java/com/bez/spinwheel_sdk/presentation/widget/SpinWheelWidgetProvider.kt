@@ -50,6 +50,8 @@ class SpinWheelWidgetProvider : AppWidgetProvider() {
 
         val state = WidgetState(context)
         if (state.isWidgetSpinning() || state.isAppSpinning()) return
+        val remaining = state.getSpinsRemaining()
+        if (remaining != null && remaining <= 0) return
 
         // Seed config from assets if widget tapped before any FCM push simulation.
         if (ConfigPrefs(context).load() == null) {
@@ -76,19 +78,30 @@ fun updateWidget(context: Context, manager: AppWidgetManager, appWidgetId: Int) 
     val isWidgetSpinning = state.isWidgetSpinning()
     val isAppSpinning = state.isAppSpinning()
     val anySpinning = isWidgetSpinning || isAppSpinning
+    val spinsRemaining = state.getSpinsRemaining()
+    val disabled = anySpinning || spinsRemaining == 0
 
     val views = RemoteViews(context.packageName, R.layout.widget_layout)
 
     // Wheel always shows the current angle; partial updates push frames during animation.
     views.setImageViewBitmap(R.id.widget_wheel, rotatedBitmap(context, R.drawable.wheel, state.getRotation()))
 
-    // Spin button: always visible, dimmed while any spin is in progress.
+    // Spin button: always visible, dimmed while disabled.
     views.setImageViewBitmap(
         R.id.widget_spin_btn,
-        if (anySpinning) dimmedBitmap(context, R.drawable.wheel_spin, alpha = 90)
+        if (disabled) dimmedBitmap(context, R.drawable.wheel_spin, alpha = 90)
         else decodeBitmap(context, R.drawable.wheel_spin)
     )
     views.setViewVisibility(R.id.widget_spin_btn, View.VISIBLE)
+
+    // Spins remaining counter — hidden until config is loaded.
+    if (spinsRemaining != null) {
+        val label = if (spinsRemaining == 1) "1 spin left" else "$spinsRemaining spins left"
+        views.setTextViewText(R.id.widget_spins_remaining, label)
+        views.setViewVisibility(R.id.widget_spins_remaining, View.VISIBLE)
+    } else {
+        views.setViewVisibility(R.id.widget_spins_remaining, View.GONE)
+    }
 
     // Explicitly clear root click so no stale intent survives a widget update.
     views.setOnClickPendingIntent(R.id.widget_root, null)
@@ -101,7 +114,7 @@ fun updateWidget(context: Context, manager: AppWidgetManager, appWidgetId: Int) 
         context, 0, spinIntent,
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
     )
-    views.setOnClickPendingIntent(R.id.widget_spin_btn, if (anySpinning) null else pendingIntent)
+    views.setOnClickPendingIntent(R.id.widget_spin_btn, if (disabled) null else pendingIntent)
 
     manager.updateAppWidget(appWidgetId, views)
 }

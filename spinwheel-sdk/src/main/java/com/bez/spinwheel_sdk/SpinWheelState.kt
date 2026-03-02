@@ -10,5 +10,7 @@ data class SpinWheelState(
     val isSpinning: Boolean = false,
     val currentAngle: Float = 0f,
     val activeConfig: WheelConfig? = null,
-    val lastSpinSource: SpinSource = SpinSource.NONE
+    val lastSpinSource: SpinSource = SpinSource.NONE,
+    /** Remaining spins allowed. Null = no config loaded yet (no limit). 0 = exhausted. */
+    val spinsRemaining: Int? = null
 )

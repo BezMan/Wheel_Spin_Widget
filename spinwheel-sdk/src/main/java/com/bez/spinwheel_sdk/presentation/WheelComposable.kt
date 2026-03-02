@@ -91,6 +91,8 @@ private fun SpinWheelScreen(config: WheelConfig) {
 
     val sdkState by SpinWheelSdk.spinState.collectAsState()
     val anySpinning = isSpinning || sdkState.isSpinning
+    val spinsRemaining = sdkState.spinsRemaining
+    val disabled = anySpinning || spinsRemaining == 0
 
     // When the activity returns to foreground, snap instantly to the latest saved angle.
     // snapTo() completes synchronously with no animation — no flag or listener needed.
@@ -122,7 +124,7 @@ private fun SpinWheelScreen(config: WheelConfig) {
 
 
     fun triggerSpin() {
-        val spins = (rotation.minimumSpins..rotation.maximumSpins).random()
+        val spins = (minOf(rotation.minimumSpins, rotation.maximumSpins)..maxOf(rotation.minimumSpins, rotation.maximumSpins)).random()
         val delta = spins * 360f + Random.nextFloat() * 360f
         val startAngle = wheelAngle.value
         scope.launch {
@@ -185,18 +187,29 @@ private fun SpinWheelScreen(config: WheelConfig) {
                     modifier = Modifier.fillMaxSize()
                 )
 
-                // ── Layer 4: spin button — disabled while any spin is in progress ──
+                // ── Layer 4: spin button — disabled while spinning or spins exhausted ──
                 Image(
                     painter = painterResource(R.drawable.wheel_spin),
-                    contentDescription = if (anySpinning) null else "Tap to spin",
+                    contentDescription = if (disabled) null else "Tap to spin",
                     modifier = Modifier
                         .size(96.dp)
-                        .alpha(if (anySpinning) 0.35f else 1f)
-                        .clickable(enabled = !anySpinning) { triggerSpin() }
+                        .alpha(if (disabled) 0.35f else 1f)
+                        .clickable(enabled = !disabled) { triggerSpin() }
                 )
             }
 
-            Spacer(modifier = Modifier.height(20.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // ── Spins remaining counter ───────────────────────────────
+            if (spinsRemaining != null) {
+                val label = if (spinsRemaining == 1) "1 spin left" else "$spinsRemaining spins left"
+                Text(
+                    text = label,
+                    style = MaterialTheme.typography.headlineSmall.copy(fontWeight = FontWeight.Bold),
+                    color = if (spinsRemaining == 0) Color(0xFFFF6B6B) else Color.White
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+            }
 
             // ── Duration badge ────────────────────────────────────────
             Text(
@@ -213,7 +226,7 @@ private fun SpinWheelScreen(config: WheelConfig) {
                     WorkManager.getInstance(context)
                         .enqueue(OneTimeWorkRequestBuilder<ConfigSyncWorker>().build())
                 },
-                enabled = !anySpinning
+                enabled = !anySpinning  // config push always available, even when spins exhausted
             ) {
                 Text("Simulate Config Push (FCM)")
             }
@@ -238,6 +251,7 @@ private fun SpinWheelScreen(config: WheelConfig) {
                     Text("Spinning:  ${sdkState.isSpinning}")
                     Text("Angle:     ${"%.1f".format(sdkState.currentAngle % 360f)}°")
                     Text("Source:    ${sdkState.lastSpinSource}")
+                    Text("Spins left:${sdkState.spinsRemaining ?: "-"}")
                     Text("Config:    ${sdkState.activeConfig?.name ?: "none"}")
                     Text("Duration:  ${sdkState.activeConfig?.wheel?.rotation?.duration ?: "-"} ms")
                 }

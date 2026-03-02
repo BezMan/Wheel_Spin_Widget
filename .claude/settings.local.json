@@ -9,7 +9,8 @@
       "Bash(./gradlew :spinwheel-sdk:publishReleasePublicationToProjectLocalRepository:*)",
       "Bash(file:*)",
       "Bash(tail:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(./gradlew :app:installDebug:*)"
     ]
   }
 }

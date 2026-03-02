@@ -35,7 +35,7 @@ class SpinAnimationWorker(
         val config = ConfigPrefs(context).load() ?: return Result.failure()
         val rotation = config.wheel.rotation
         val duration = rotation.duration.coerceIn(1000, 5000)
-        val delta = (rotation.minimumSpins..rotation.maximumSpins).random() * 360f +
+        val delta = (minOf(rotation.minimumSpins, rotation.maximumSpins)..maxOf(rotation.minimumSpins, rotation.maximumSpins)).random() * 360f +
                 Random.nextFloat() * 360f
 
         val startAngle = state.getRotation()

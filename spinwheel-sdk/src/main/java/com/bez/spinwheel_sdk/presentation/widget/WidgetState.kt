@@ -19,10 +19,16 @@ internal class WidgetState(context: Context) {
     fun isAppSpinning(): Boolean = prefs.getBoolean(KEY_APP_SPINNING, false)
     fun setAppSpinning(v: Boolean) = prefs.edit { putBoolean(KEY_APP_SPINNING, v) }
 
+    /** Remaining spin count. Null = not yet seeded from config (no limit applied). */
+    fun getSpinsRemaining(): Int? =
+        if (prefs.contains(KEY_SPINS_REMAINING)) prefs.getInt(KEY_SPINS_REMAINING, 0) else null
+    fun setSpinsRemaining(count: Int) = prefs.edit { putInt(KEY_SPINS_REMAINING, count) }
+
     companion object {
         internal const val PREFS_NAME = "spinwheel_widget_state"
         internal const val KEY_ROTATION = "rotation"
         private const val KEY_WIDGET_SPINNING = "widget_spinning"
         private const val KEY_APP_SPINNING = "app_spinning"
+        private const val KEY_SPINS_REMAINING = "spins_remaining"
     }
 }

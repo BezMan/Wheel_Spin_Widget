@@ -19,8 +19,8 @@
       "wheel": {
         "rotation": {
           "duration": 1000,
-          "minimumSpins": 3,
-          "maximumSpins": 5,
+          "minimumSpins": 1,
+          "maximumSpins": 1,
           "spinEasing": "easeInOutCubic"
         },
         "assets": {
@@ -50,8 +50,8 @@
       "wheel": {
         "rotation": {
           "duration": 2500,
-          "minimumSpins": 3,
-          "maximumSpins": 5,
+          "minimumSpins": 2,
+          "maximumSpins": 2,
           "spinEasing": "easeInOutCubic"
         },
         "assets": {
@@ -81,7 +81,7 @@
       "wheel": {
         "rotation": {
           "duration": 5000,
-          "minimumSpins": 2,
+          "minimumSpins": 3,
           "maximumSpins": 3,
           "spinEasing": "easeInOutCubic"
         },
